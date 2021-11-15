@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include "String.h"         // Definição de uma classe string, cuja
                             // interface seja idêntica à definida.
 // Armazena uma string e um valor inteiro
@@ -76,29 +77,42 @@ unsigned &Assoc::operator[]( const String &k) {
 }
 
 struct Print {
-    unsigned count; // Numero de elementos escritos
-    unsigned val;   // Valor a comparar
-    // Construtor por omissão inicia val = 0 e count = 0;
-    Print (unsigned v = 0):count(v), val(v) { }
+    enum Mode { CAB = 0x01, WAIT = 0x02};
+    unsigned count;     // Numero de elementos escritos
+    unsigned val;       // Valor a comparar
+    std::ostream &out;  // ostream para escrita
+    unsigned mode;      // Formato da listagem
+    // Se na construção for omitido:
+    //      3º Parametro - lista todas as palavras
+    //      2º Parametro - escreve cabeçalho e suspende a escrita
+    //      1º Parametro - lista no console output
+    Print (std::ostream &o = std::cout, unsigned m = CAB|WAIT, unsigned v = 0):
+    mode(m), out (o), count(v), val(v) { }
     // Sobrecarga do operador chamada a função
     void operator() (const Pair &p) {
         const unsigned NUM_OF_LINES = 22;
         if (p.value >= val){
             // No inicio de cada pagina esvre o cabeçalho
-            if (count % NUM_OF_LINES == 0)
-                std::cout << "Ocorrencias Palavra " << std::endl;
-            std::cout << std::setw(6) << p.value << std::setw(6) << ' ' << p.key << std::endl;
+            if ((mode&CAB) && count % NUM_OF_LINES == 0)
+                out << "Ocorrencias Palavra " << std::endl;
+            out << std::setw(6) << p.value << std::setw(6) << ' ' << p.key << std::endl;
             ++count;
             // Suspende a escrita no fim de cada pagina.
-            if (count % NUM_OF_LINES == 0)
+            if ((mode&WAIT) && count % NUM_OF_LINES == 0)
                 std::cin.get();
         }
     }
 };
 
-void print (Assoc::Const_Iterator first, Assoc::Const_Iterator last, Print p = Print()) {
+Print print (Assoc::Const_Iterator first, Assoc::Const_Iterator last, Print p = Print()) {
     while (first != last)
         p(*first++);
+    return p;
+}
+
+void error (const char *str) {
+    std::cerr << str << std::endl;
+    exit(-1);
 }
 
 unsigned avg(const Assoc &tb) {
@@ -109,16 +123,28 @@ unsigned avg(const Assoc &tb) {
 }
 
 int main (int argc, char ** argv) {
+    // Testar o número de argumentos da linha de comando
+    if (argc != 2 && argc != 3)
+        error("Número de argumentos da linhas de comando incorreto");
+    // Criar o objecto istream e associa-lo ao ficheiro cujo
+    // pathname é o valor de argv[1]
+    std::ifstream fin(argv[1]);
+    if (!fin)
+        error("Erro ao abrir o ficheiro input");
     String word;        // Buffer para as palavras recolhidas
     Assoc table(256);   // Tabela associativa.
     // Conta ocorrências de cada palavra na entrada.
-    while(std::cin >> word) ++table[word];
-    clearerr(stdin);
-    std::cin.clear();
+    while(fin >> word) ++table[word];
     // Listar todas as ocorrências no console output
     print (table.begin(), table.end());
-    // Listar no console output os pares cujas palavras
-    // tenham ocorrências superiores ou iguais à média
-    print (table.begin(), table.end(), Print(avg(table)));
+    // Listar num ficheiro de texto os pares cujas palavras
+    // tenham ocorrências superior ou iguais à média.
+    if (argc == 3) {
+        std::ofstream fout(argv[2]);
+        if (!fout)  // Testar se a abertura foi bem sucedida
+            error("Erro ao abrir o ficheiro de output.");
+        Print p = print(table.begin(), table.end(), Print(fout, 0, avg(table)));
+        std::cout << "Ocorreram " << p.count << " palavras com " << p.val << " ocorrencias." << std::endl;
+    }
     return 0;
 }
