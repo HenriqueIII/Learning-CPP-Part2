@@ -1,5 +1,5 @@
 1.<br>
-    a) Analisar e corrigir a seginte definição de uma classe **Fraction**<br>
+    a) Analisar e corrigir a seguinte definição de uma classe **Fraction**<br>
 ```cpp
 class Fraction{
     int nn, dd;
@@ -56,12 +56,12 @@ d) Alterar a função para que o número de termos seja obtido através da linha
 comando.
 
 e) Definir como público a sobrecarga do operador de comparação ("<"). Defina
-a sobecarga dos restantes operadores de comparação ("==", ">", "!=" )
-invocando direta ou indirectamente o operador "<". Faça um programa para
+a sobrecarga dos restantes operadores de comparação ("==", ">", "!=" )
+invocando direta ou indiretamente o operador "<". Faça um programa para
 teste dos operadores de comparação
 
 f) Usando a classe Fraction, tente calcular a soma dos 100 primeiros termos
-da série proposta na alinea c) e infira qual a razão pela qual esse objectivo não
+da série proposta na alínea c) e infira qual a razão pela qual esse objetivo não
 é possível.
 
 2. Analise as seguintes definições
@@ -100,7 +100,7 @@ std::ostream &operator<<(std::ostream &o, const Time &t) {
     return o << std::setfill('0') << std::setw(2) << t.getHours() << ':' << std::setw(2) << t.getMinutes() << std::setfill(cFill);
 }
 ```
-a) Identifique as incorrecções e emende-as
+a) Identifique as incorreções e emende-as
 
 b) Defina como privado o método *normalize()*, e como públicos os *overloads* dos operadores de comparação ("<",">","==" e "!=").
 
@@ -123,4 +123,4 @@ int main(int argc, char ** argv) {
     std::cout << t1 << ' ' << op << ' ' << t2 << " = " << res << std::endl;
 }
 ```
-d) Acrescente ao programa anterior a possibilidade de calcular o módulo da diferença temporal entre duas instâncias da classe *Time* (use o simbolo "^" para significar esta operação e defina a respectiva função *overload*).
+d) Acrescente ao programa anterior a possibilidade de calcular o módulo da diferença temporal entre duas instâncias da classe *Time* (use o símbolo "^" para significar esta operação e defina a respetiva função *overload*).
