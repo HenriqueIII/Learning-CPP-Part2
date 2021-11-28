@@ -63,6 +63,7 @@ teste dos operadores de comparação
 f) Usando a classe Fraction, tente calcular a soma dos 100 primeiros termos
 da série proposta na alínea c) e infira qual a razão pela qual esse objetivo não
 é possível.
+Derivado ao teto máximo de inteiros, não é possível calcular com exatidão o resultado.
 
 2. Analise as seguintes definições
 ```cpp
