@@ -40,11 +40,16 @@ public:
 };
 
 class BigInt::BigRep {  // Body, representação de um BigInt
+// << Atributos >>
     int count;      // BigInts que partilham este BigRep
     size_t sz;      // Número de digitos
     size_t dim;     // Dimensão do espaço alojado
     int signal;     // -1 se negativo, 1 se positivo
     word *v;        // A representação
+// << Metodos auxiliares >>
+    // Reserva de Memória
+    word *allocate(size_t dimension);
+    word *allocate(size_t s, size_t d);
 public:
 // << Construtores e destrutores >>
     BigRep (const char * s, StrType, size_t = DIM_MIN);
@@ -91,7 +96,22 @@ BigInt::BigRep::BigRep (const char *s, StrType type, size_t dim) {
 ***************************************/
 
 void BigInt::BigRep::text2big (const char * s, size_t len, size_t dim) {
-    
+    // Calculo da dimensão minima do array de words
+    sz = len / sizeof(word) + (len % sizeof(word) != 0);
+    // Reserva espaço maior que sz e menor ou igual a dim
+    v = allocate(sz, dim);
+    v[sz-1] = 0;            // Garantir zero nos bits nao usados
+    signal = 1;             // Positivo
+    memcpy(v,s,len);        // copia os dados
+}
+
+word *BigInt::BigRep::allocate (size_t dimension) {
+    for (dim = DIM_MIN; dim < dimension; dim *= 2);
+    return new word [dim];
+}
+
+word *BigInt::BigRep::allocate (size_t s, size_t d) {
+    return allocate (d < s ? s : d);
 }
 
 #endif
