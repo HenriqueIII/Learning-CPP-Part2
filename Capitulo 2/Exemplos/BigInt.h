@@ -95,6 +95,15 @@ BigInt::BigRep::BigRep (const char *s, StrType type, size_t dim) {
 *       METODOS BIGREP                 *
 ***************************************/
 
+word *BigInt::BigRep::allocate (size_t dimension) {
+    for (dim = DIM_MIN; dim < dimension; dim *= 2);
+    return new word [dim];
+}
+
+word *BigInt::BigRep::allocate (size_t s, size_t d) {
+    return allocate (d < s ? s : d);
+}
+
 void BigInt::BigRep::text2big (const char * s, size_t len, size_t dim) {
     // Calculo da dimensão minima do array de words
     sz = len / sizeof(word) + (len % sizeof(word) != 0);
@@ -105,13 +114,33 @@ void BigInt::BigRep::text2big (const char * s, size_t len, size_t dim) {
     memcpy(v,s,len);        // copia os dados
 }
 
-word *BigInt::BigRep::allocate (size_t dimension) {
-    for (dim = DIM_MIN; dim < dimension; dim *= 2);
-    return new word [dim];
+void BigInt::BigRep::hex2big(const char * s, size_t len, size_t dim) {
+    const char * saux = s;
+    const size_t BITS_PER_DIGIT = 4;
+    const size_t DIGITS_PER_WORD = BITS_WORD/BITS_PER_DIGIT;
+    if ( *saux == '-' ) {
+        signal = -1;
+        ++saux;
+    }else
+        signal = 1;
+    while (*saux == '0' ) ++saux;   // Remoção zeros à esquerda
+    len -= saux - s;                // Atualização do comprimento
+    // Calculo da dimensão minima do array de words
+    sz = len / DIGITS_PER_WORD + (len%DIGITS_PER_WORD != 0);
+    v = allocate(sz, dim);          // Reserva do espaço
+    v[sz -1] = 0;                   // Garante zero nos bits não usados
+    // Numero de digitos a converter para word
+    size_t nOfDigs = DIGITS_PER_WORD;
+    for (size_t i = 0; len; ++i, len -= nOfDigs) {
+        if (len < DIGITS_PER_WORD)  // Ultimo conjunto a converter
+            nOfDigs = len;
+        // Converter digs caracteres em word
+        word aux = 0;
+        for (size_t j = nOfDigs; j; --j) {
+            aux <<= BITS_PER_DIGIT;
+            aux += tolower(saux[len -j]) - (isdigit(saux[len -j]) ? '0' : 'a' - 10 );
+        }
+        v[i] = aux;
+    }
 }
-
-word *BigInt::BigRep::allocate (size_t s, size_t d) {
-    return allocate (d < s ? s : d);
-}
-
 #endif
