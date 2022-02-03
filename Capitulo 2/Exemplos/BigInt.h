@@ -131,6 +131,7 @@ void BigInt::BigRep::hex2big(const char * s, size_t len, size_t dim) {
     v[sz -1] = 0;                   // Garante zero nos bits não usados
     // Numero de digitos a converter para word
     size_t nOfDigs = DIGITS_PER_WORD;
+    --len;
     for (size_t i = 0; len; ++i, len -= nOfDigs) {
         if (len < DIGITS_PER_WORD)  // Ultimo conjunto a converter
             nOfDigs = len;
