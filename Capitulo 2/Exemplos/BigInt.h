@@ -17,17 +17,70 @@ static const dword B_Radix = 0xFFFF + 1;
 static const word MAXDIGIT = 0xFFFF;
 
 class BigInt {
+public:
+    // Enumerado de tipos de strings para o construtor
+    enum StrType {TEXT, HEX, DEC};
+private:
 // << Classes internas >>
-    class BigRep;       // Representação (Body)
-    class BigRepPtr;    // Apontador inteligente para BigRep
+    class BigRep {       // Representação (Body)
+    // << Atributos >>
+        int count;      // BigInts que partilham este BigRep
+        size_t sz;      // Número de digitos
+        size_t dim;     // Dimensão do espaço alojado
+        int signal;     // -1 se negativo, 1 se positivo
+        word *v;        // A representação
+    // << Metodos auxiliares >>
+        // Reserva de Memória
+        word *allocate(size_t dimension);
+        word *allocate(size_t s, size_t d);
+    public:
+        friend BigInt;
+    // << Construtores e destrutores >>
+        BigRep (const char * s, StrType, size_t = DIM_MIN);
+        BigRep (long = 0, size_t = DIM_MIN);
+        ~BigRep () { delete [] v; }
+    // << Metodos de conversão >>
+        void text2big (const char *, size_t len, size_t dim);
+        void hex2big (const char *, size_t len, size_t dim);
+        void dec2big (const char *, size_t len, size_t dim);
+    // << Metodos de acesso à contagem de referências >>
+        void incRef() { ++count; };
+        int decRef() { 
+            if(--count) 
+                return count; 
+            delete this;
+            return count;
+        }
+        bool unique() { return count == 1; }
+    };
+
+    class BigRepPtr {   // Apontador inteligente para BigRep
+    // << Membros >>
+        BigRep * ptr;   // Ponteiro para representação.
+    public:
+    // << Construtores e destrutor >>
+        BigRepPtr(BigRep * sr) : ptr(sr) { ptr->incRef(); }
+        BigRepPtr(const BigRepPtr &srp) : ptr(srp.ptr) { ptr->incRef(); }
+        ~BigRepPtr() { ptr->decRef(); }
+    // << Operadores afetação >>
+        void operator= (BigRep *s){
+            s->incRef(); ptr->decRef(); ptr = s;
+        }
+        void operator= (const BigRepPtr &sp) {
+            *this = sp.ptr;
+        }
+    // << Operadores de desreferencia >>
+        BigRep &operator* () const { return *ptr; }
+        BigRep *operator-> () const { return ptr; }
+    };
+    
     class BigTmp;       // BigInt Temporário
+
 // << Atributo Unico >>
     BigRepPtr brp;
     // Capacidade minima do vector representado
     static const byte DIM_MIN = 4;
 public:
-    // Enumerado de tipos de strings para o construtor
-    enum StrType {TEXT, HEX, DEC};
 // << Construtores >>
     // Construtor com string C-Style e dimensão
     BigInt (const char *, StrType = DEC, size_t = DIM_MIN);
@@ -37,27 +90,19 @@ public:
     BigInt (size_t dimension, const BigInt &x);
     // Contrutor a partir de um temporário
     BigInt (const BigTmp &x);
+// << Interface de BigInt >>
+    BigInt &BigInt::operator=(long n) {
+        if (brp->count > 1)
+            brp = new BigRep(n);
+        else
+            *brp = n;
+        return *this;
+    }
+
 };
 
-class BigInt::BigRep {  // Body, representação de um BigInt
-// << Atributos >>
-    int count;      // BigInts que partilham este BigRep
-    size_t sz;      // Número de digitos
-    size_t dim;     // Dimensão do espaço alojado
-    int signal;     // -1 se negativo, 1 se positivo
-    word *v;        // A representação
-// << Metodos auxiliares >>
-    // Reserva de Memória
-    word *allocate(size_t dimension);
-    word *allocate(size_t s, size_t d);
-public:
-// << Construtores e destrutores >>
-    BigRep (const char * s, StrType, size_t = DIM_MIN);
+class BigInt::BigTmp {
 
-// << Metodos de conversão >>
-    void text2big (const char *, size_t len, size_t dim);
-    void hex2big (const char *, size_t len, size_t dim);
-    void dec2big (const char *, size_t len, size_t dim);
 };
 
 
@@ -89,6 +134,20 @@ BigInt::BigRep::BigRep (const char *s, StrType type, size_t dim) {
         case  DEC: default: dec2big(s, strlen(s), dim);
     }
     count = 0;
+}
+
+BigInt::BigRep::BigRep (long n, size_t dim) {
+    count = 0;      // Iniciar contador de referências
+    if (n >= 0)
+        signal = 1;
+    else
+        { n = -n; signal = -1; }
+
+    sz = (dword(n) > MAXDIGIT) ? 2 : 1;
+    v = allocate(dim);
+    v[0]= word (n % B_Radix);
+    if (sz == 2)
+        v[1] = word(n / B_Radix);
 }
 
 /***************************************
@@ -144,4 +203,35 @@ void BigInt::BigRep::hex2big(const char * s, size_t len, size_t dim) {
         v[i] = aux;
     }
 }
+
+void BigInt::BigRep::dec2big(const char * s, size_t len, size_t dim){
+    int aux_signal;
+    if (*s == '-')
+        { aux_signal = -1; ++s; }
+    else
+        aux_signal = 1;
+
+    while (*s == '0') ++s;          // Remover os zero à esquerda
+
+    v = allocate(len/4,dim);        // Número de words é len/4
+    sz = 1; v[0] = 0; signal = 1;   // Colocar *this = 0
+    while (*s) {
+        *this *= 10;
+        *this += *s++ -'0';
+    }
+    signal = aux_signal;            // Atualizar o sinal
+}
+
+void BigInt::BigRep::operator= (long n) {
+    if (n >= 0) signal = 1;
+    else { n = -n; signal = -1; }
+
+    sz = (dword(n) > MAXDIGIT) ? 2 : 1; 
+
+    v[0] = word (n % B_Radix);
+
+    if (sz == 2)
+        v[1] = word (n / B_Radix);
+}
+
 #endif
