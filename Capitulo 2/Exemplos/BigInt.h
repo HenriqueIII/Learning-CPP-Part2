@@ -39,6 +39,11 @@ private:
         BigRep (const char * s, StrType, size_t = DIM_MIN);
         BigRep (long = 0, size_t = DIM_MIN);
         ~BigRep () { delete [] v; }
+    // << Operadores afetação >>
+        void operator=(const BigRep &);
+        void operator=(const long);
+    // << Metodos de acesso >>
+        void neg() { signal = -signal; }
     // << Metodos de conversão >>
         void text2big (const char *, size_t len, size_t dim);
         void hex2big (const char *, size_t len, size_t dim);
@@ -80,6 +85,11 @@ private:
     BigRepPtr brp;
     // Capacidade minima do vector representado
     static const byte DIM_MIN = 4;
+// << Metodos auxiliares >>
+    void unlink() {
+        if (brp->count > 1)
+            brp = new BigRep(*brp); // o segundo parametro toma
+    }                                // valor DIM_MIN por omissão
 public:
 // << Construtores >>
     // Construtor com string C-Style e dimensão
@@ -98,7 +108,31 @@ public:
             *brp = n;
         return *this;
     }
+// << Metodos de acesso >>
+    BigInt operator-() const {
+        BigInt aux(*this); aux.brp->neg(); return aux;
+    }
+// << Operadores aritmeticos >>
+    #define oper(op) \
+    BigInt &operator op (const BigInt &b) {\
+        unlink(); *brp op *b.brp; return *this;\
+    }
+    oper(+=) oper(-=)
+    #undef oper
 
+    #define oper(op)\
+    BigInt &operator##= (const BigInt &b) {\
+        brp = *brp op *b.brp; return *this;\
+    }
+    oper(*) oper(/) oper(%)
+    #undef oper
+
+    #define oper(op) \
+    BigInt operator op (const BigInt &a, const BigInt &b) {\
+        BigInt aux(a); return aux op##= b;\
+    }
+    oper(+) oper(-) oper(*) oper(/) oper(%)
+    #undef oper
 };
 
 class BigInt::BigTmp {
