@@ -33,21 +33,74 @@ private:
         // Reserva de Memória
         word *allocate(size_t dimension);
         word *allocate(size_t s, size_t d);
+        void reserve(size_t newDimension);
+        //Auxxiliar para escrita em decimal num ostream
+        static void big2dec(BigRep & bb, std::ostream &os);
+        //Metodo de comparação
+        static int cmp(const BigRep & a, const BigRep & b);
+        //Metodos de comparação em modulo
+        static int cmpMod(const BigRep & a, const BigRep & b);
+        static int cmpMod(const BigRep & a, word b);
+        //Metodos executores das operações shift
+        void shiftLeft(const word nShifts);
+        void shiftRight(const word nShifts);
+        //Metodos executores das operações normalizadas
+        static void addNorm(BigRep &add, const BigRep &max, const BigRep &min);
+        static void addNorm(BigRep &add, const BigRep &br, word);
+        static void subNorm(BigRep &sub, const BigRep &max, const BigRep &min);
+        static void subNorm(BigRep &sub, const BigRep &max, word);
+        static void multNorm(BigRep &prod, const BigRep &max, const BigRep &min);
+        static void multNorm(BigRep &prod, const BigRep &br, word);
+        //Metodo auxiliar para a divisão normalizada
+        static word gessDig (BigRep &aux, BigRep &d);
+        static void divNorm(BigRep &quo, BigRep &rest, const BigRep &dd, const BigRep &d);
+        static word divNorm(BigRep &quo, word &rest, const BigRep &dd, word);
     public:
         friend BigInt;
     // << Construtores e destrutores >>
         BigRep (const char * s, StrType, size_t = DIM_MIN);
         BigRep (long = 0, size_t = DIM_MIN);
+        BigRep (const BigRep &, size_t dimension=DIM_MIN);
         ~BigRep () { delete [] v; }
     // << Operadores afetação >>
         void operator=(const BigRep &);
         void operator=(const long);
     // << Metodos de acesso >>
+        bool isOdd()const  { return (v[0] & 1); }
+        bool isEven()const { return !(v[0] & 1); }
+        bool isZero()const { return (sz == 1 && v[0] == 0); }
+        bool isOne()const  { return sz == 1 && v[0] == 1 && signal == 1; }
         void neg() { signal = -signal; }
+    // << Metodos de escrita em stream >>
+        void big2txt(std::ostream &os) const; // BigInteger to text
+        void big2dec(std::ostream &os) const; // BigInteger to dec
+        void big2hex(std::ostream &os) const; // BigInteger to hex
     // << Metodos de conversão >>
         void text2big (const char *, size_t len, size_t dim);
         void hex2big (const char *, size_t len, size_t dim);
         void dec2big (const char *, size_t len, size_t dim);
+    // << Sobrecarga dos Operadores >>
+        void operator++();
+        void operator <<=(const word n)
+            { if (n!=0 && !isZero()) shiftLeft(n); }
+        void operator >>=(const word n)
+            { if (n!=0 && !isZero()) shiftRight(n); }
+        void operator += (const BigRep&);
+        void operator -= (const BigRep&);
+        BigRep *operator* (const BigRep&) const;
+        BigRep *operator% (const BigRep&) const;
+        BigRep *operator/ (const BigRep&) const;
+    #define oper(op)\
+        void operator op (word);
+        oper(+=) oper(-=) oper(*=) oper(%=) oper(/=)
+    #undef oper
+    // << Operadores relacionais >>
+    #define oper(op)\
+        int operator op (const BigRep &b) const {\
+            return cmp(*this, b) op 0; \
+        }
+        oper(<) oper(>) oper(<=) oper(>=) oper(!=) oper(==)
+    #undef oper
     // << Metodos de acesso à contagem de referências >>
         void incRef() { ++count; };
         int decRef() { 
@@ -121,18 +174,12 @@ public:
     #undef oper
 
     #define oper(op)\
-    BigInt &operator##= (const BigInt &b) {\
+    BigInt &operator op##= (const BigInt &b) {\
         brp = *brp op *b.brp; return *this;\
     }
     oper(*) oper(/) oper(%)
     #undef oper
 
-    #define oper(op) \
-    BigInt operator op (const BigInt &a, const BigInt &b) {\
-        BigInt aux(a); return aux op##= b;\
-    }
-    oper(+) oper(-) oper(*) oper(/) oper(%)
-    #undef oper
 };
 
 class BigInt::BigTmp {
@@ -267,5 +314,14 @@ void BigInt::BigRep::operator= (long n) {
     if (sz == 2)
         v[1] = word (n / B_Radix);
 }
+
+
+
+#define oper(op) \
+    BigInt operator op (const BigInt &a, const BigInt &b) {\
+        BigInt aux(a); return aux op##= b;\
+    }
+    oper(+) oper(-) oper(*) oper(/) oper(%)
+    #undef oper
 
 #endif
