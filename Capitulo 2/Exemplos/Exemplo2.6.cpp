@@ -1,5 +1,5 @@
 #include <iostream>
-// #include "BigInt.h"
+#include "BigInt.h"
 #include <cstring>
 
 typedef unsigned char byte;     // sizeof == 8bits
