@@ -66,14 +66,45 @@ private:
         void operator=(long n);
         void operator= (const BigRep &);
     // << Métodos de Acesso >>
+        bool isOdd() const  { return (v[0]&1);  }
+        bool isEven() const { return !(v[0]&1); }
+        bool isZero() const { return (sz==1 && v[0]==0); }
+        bool isOne() const  { return sz==1 && v[0]==1 && signal==1; }
         void neg() { signal = -signal; }
+    // << Métodos de escrita em ostream >>
+        void big2text(const char *, size_t len, size_t dim);
+        void big2hex(const char *, size_t len, size_t dim);
+        void big2dec(const char *, size_t len, size_t dim);
     // << Metodos de conversão >>
         void text2big (const char *, size_t len, size_t dim);
         void hex2big (const char *, size_t len, size_t dim);
         void dec2big (const char *, size_t len, size_t dim);
+    // << Sobrecarga dos operadores >>
+        void operator++();
+        void operator<<=(const word n)
+            { if (n!= 0 && !isZero()) shiftLeft(n); }
+        void operator>>=(const word n)
+            { if (n!= 0 && !isZero()) shiftRight(n); }
+        void operator+=(const BigRep&);
+        void operator-=(const BigRep&);
+        BigRep *operator* (const BigRep&) const;
+        BigRep *operator% (const BigRep&) const;
+        BigRep *operator/ (const BigRep&) const;
+    #define oper(op) \
+        void operator op (word);
+        oper(+=) oper(-=) oper(*=) oper(/=) oper(%=)
+    #undef oper
+        // << Operadores Relacionais >>
+    #define oper(op) \
+        int operator op (const BigRep & b) const { \
+            return cmp(*this, b) op 0; \
+        }
+        oper(<) oper(>) oper(<=) oper(>=) oper(!=) oper(==)
+    #undef oper
     // << Gestão do contador de Referências >>
-        void incRef() { ++count; }
-        void decRef() { if(--count == 0) delete this; }
+        void incRef() { ++count;                                            }
+        int decRef() { if(--count == 0) return count; delete this; return;  }
+        bool unique() const { return count == 1;                            }
     };
     class BigRepPtr{    // Apontador inteligente para BigRep
     // << Atributos >>
@@ -109,8 +140,12 @@ public:
 // << Métodos de escrita no ostream
     // .....
 // << Métodos de Acesso >>
+    size_t size() const     { return brp->sz;   }
     BigInt operator-() const{
         BigInt aux(*this); aux.brp->neg(); return aux;
+    }
+    BigInt operator++() {
+        unlink(); ++(*brp); return *this;
     }
 // << Operadores Aritméticos >>
 #define oper(op) \
@@ -125,17 +160,43 @@ public:
 #undef oper
 
 #define oper(op) \
-    BigInt operator op (const BigInt &a, const BigInt &b) \
+    friend BigInt operator op (const BigInt &a, const BigInt &b) \
         { BigInt aux(a); return aux op##= b; }
     oper(+) oper(-) oper(*) oper(/) oper(%)
+#undef oper
+
+#define oper(op) \
+    friend bool operator op (const BigInt &a, const BigInt &b) \
+        { return *a.brp op *b.brp; }
+    oper(<) oper(>) oper(<=) oper(>=) oper(!=) oper(==)
 #undef oper
 };
 
 class BigTmp{       // BigInt temporário
     friend class BigInt;
 // << Atributos >>
-    BigInt bigint;
+    BigInt bigint; // Unico Atributo
+    BigTmp(size_t dim, const BigInt &x) : bigint(dim, x) { }
+public:
+// << sobrecarga dos operadores aritméticos >>
+#define oper(op) \
+    BigTmp &operator op (const BigInt &x) \
+        { bigint op##= x; return *this; }
+    oper(+) oper(-)
+#undef oper
 };
+
+#define oper(op) \
+    inline BigTmp &operator op (const BigInt &a, const BigInt &b) \
+        { return BigTmp(max(a.size(), b.size())+1, a) op b; }
+    oper(+) oper(-)
+#undef oper
+
+#define oper(op) \
+    inline BigTmp &BigTmp::operator op (const BigInt &x) \
+        { bigint op##= x; return *this; }
+    oper(+) oper(-)
+#undef oper
 
 inline BigInt::BigInt(const char *s, StrType type, size_t dim) : brp( new BigRep(s, type, dim )) { }
 inline BigInt::BigInt(long n, size_t dim) : brp ( new BigRep(n, dim) ) { }
@@ -183,6 +244,27 @@ v = allocate(sz, dim);                  // Reservar espaço.
 word * BigInt::BigRep::allocate(size_t dimension) {
     for (dim = DIM_MIN; dim < dimension; dim *= 2);
     return new word[dim];
+}
+// Método Estatico que compara objectos BigInt em valor
+int BigInt::BigRep::cmp(const BigRep &a, const BigRep &b) {
+    if (a.signal != b.signal) return a.signal;
+    return (a.signal == -1) ? cmpMod(b,a) : cmpMod(a,b);
+}
+void BigInt::BigRep::reserve(size_t newDimension) {
+    if (dim < newDimension) {
+        word *paux=allocate(newDimension);
+        memcpy(paux, v, sz * sizeof(word));
+        delete [] v;
+        v=paux;
+    }
+}
+// Método estatico que comapra em modulo objectos BigRep
+int BigInt::BigRep::cmpMod(const BigRep &a, const BigRep &b) {
+    if (a.sz != b.sz) return a.sz > b.sz ? 1:-1;
+    size_t index = a.sz -1;
+    for (;a.v[index]==b.v[index]; --index)
+        if(index == 0) return 0;
+    return (a.v[index]>b.v[index]) ? 1 : -1;
 }
 void BigInt::BigRep::operator= (long n) {
     if (n >= 0) signal = 1;
@@ -248,10 +330,16 @@ void BigInt::BigRep::dec2big(const char * s, size_t len, size_t dim) {
     }
     signal = aux_signal;            // Atualizar o sinal
 }
-
-
-
-
+void BigInt::BigRep::operator++() {
+    size_t i = 0;
+    while (i < sz && v[i] == MAX_DIGIT)
+        v[i++]=0;
+    if (i==sz) {
+        reserve(++sz);
+        v[i] = 1;
+    }else
+        ++v[i];
+}
 int main(int argc, char ** argv){
     std::cout << sizeof(byte) << " " << sizeof(word) << " " << sizeof(dword) << std::endl;
     std::cout << BITS_WORD << " " << B_Radix << " " << MAX_DIGIT << std::endl;
