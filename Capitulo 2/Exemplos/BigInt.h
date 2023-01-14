@@ -194,4 +194,11 @@ public:
 #undef oper
 };
 
+std::ostream &txt(std::ostream &o);
+std::ostream &operator<<(std::ostream &os, const BigInt &bi);
+inline BigInt::BigInt(const char *s, StrType type, size_t dim) : brp( new BigRep(s, type, dim )) { }
+inline BigInt::BigInt(long n, size_t dim) : brp ( new BigRep(n, dim) ) { }
+inline BigInt::BigInt(size_t dim, const BigInt &x) : brp( new BigRep(*x.brp, dim) ) { }
+inline BigInt::BigInt(const BigTmp &tmp) : brp (tmp.bigint.brp) { }
+
 #endif

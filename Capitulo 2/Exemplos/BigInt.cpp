@@ -12,10 +12,6 @@ inline size_t max(size_t a, size_t b) { return (a>b) ? a : b; }
     oper(+) oper(-)
 #undef oper
 // Construtores
-inline BigInt::BigInt(const char *s, StrType type, size_t dim) : brp( new BigRep(s, type, dim )) { }
-inline BigInt::BigInt(long n, size_t dim) : brp ( new BigRep(n, dim) ) { }
-inline BigInt::BigInt(size_t dim, const BigInt &x) : brp( new BigRep(*x.brp, dim) ) { }
-inline BigInt::BigInt(const BigTmp &tmp) : brp (tmp.bigint.brp) { }
 BigInt::BigRep::BigRep(const char *s, StrType typ, size_t dim){
     switch (typ)
     {
@@ -379,24 +375,6 @@ void BigInt::BigRep::operator++() {
     }else
         ++v[i];
 }
-
-std::ostream &txt(std::ostream &o){
-    o.unsetf(std::ios_base::dec|std::ios_base::hex);
-    return o;
-}
-std::ostream &operator<<(std::ostream &os, const BigInt &bi) {
-    // Caso a flag ios_base::dec esteja activa devido
-    // à prévia inserção no ostream do manipulador dec
-    if (os.flags() & std::ios_base::dec)
-        bi.big2dec(os);
-    // Caso a flag ios_base::hex esteja activa devido
-    // à prévia inserção no ostream do manipulador hex
-    else if (os.flags() & std::ios_base::hex) bi.big2hex(os);
-    // Caso amabas as flag anteriores não estejam activadas
-    // devido à prévia inserção no ostream do manipulador txt
-    else bi.big2txt(os);
-    return os;
-}
 inline void BigInt::big2txt(std::ostream &os) const {
     brp->big2txt(os);   // Delega a escrita na representação
 }
@@ -529,3 +507,23 @@ void BigInt::BigRep::operator %=(word n) {
 	}
     oper(*=)   oper(/=) 
 #undef oper*/
+
+
+std::ostream &txt(std::ostream &o){
+    o.unsetf(std::ios_base::dec|std::ios_base::hex);
+    return o;
+}
+
+std::ostream &operator<<(std::ostream &os, const BigInt &bi) {
+    // Caso a flag ios_base::dec esteja activa devido
+    // à prévia inserção no ostream do manipulador dec
+    if (os.flags() & std::ios_base::dec)
+        bi.big2dec(os);
+    // Caso a flag ios_base::hex esteja activa devido
+    // à prévia inserção no ostream do manipulador hex
+    else if (os.flags() & std::ios_base::hex) bi.big2hex(os);
+    // Caso amabas as flag anteriores não estejam activadas
+    // devido à prévia inserção no ostream do manipulador txt
+    else bi.big2txt(os);
+    return os;
+}

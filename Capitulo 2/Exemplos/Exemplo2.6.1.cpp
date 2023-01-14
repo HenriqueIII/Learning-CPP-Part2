@@ -2,7 +2,8 @@
 #include <cstring>
 #include <assert.h>
 #include <iomanip>
-#include <BigInt.h>
+#include <ctime>
+#include "BigInt.h"
 
 
 int main(int argc, char ** argv){
