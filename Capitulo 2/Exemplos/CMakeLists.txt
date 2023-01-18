@@ -5,7 +5,9 @@ include(CTest)
 enable_testing()
 add_library(BigInt BigInt.cpp)
 add_executable(Exemplo2.6.1 Exemplo2.6.1.cpp)
+add_executable(Exemplo2.8 Exemplo2.8.cpp)
 target_link_libraries(Exemplo2.6.1 PUBLIC BigInt)
+target_link_libraries(Exemplo2.8 PUBLIC BigInt)
 
                           target_include_directories(Exemplo2.6.1 PUBLIC
                           "${PROJECT_BINARY_DIR}"

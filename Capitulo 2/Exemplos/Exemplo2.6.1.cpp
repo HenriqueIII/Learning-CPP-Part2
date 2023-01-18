@@ -14,10 +14,7 @@ int main(int argc, char ** argv){
         n3 = n1 * n3;
         n3 += BigInt("-123456780", BigInt::DEC);
         n5 = n3/n4;
-        n5 *= n4;
-        n2 = n3%n4;
-        n5 += n2;
-        n5 -= n3;
+        n5 = n5 * n4 + n3 % n4 - n3;
         n3 -= -123456780L;
         if (n5 != 0L) std::cout << "ERRO" << std::endl;
     }

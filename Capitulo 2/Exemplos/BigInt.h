@@ -8,13 +8,6 @@ typedef unsigned char byte;     // sizeof == 8 bits == 255
 typedef unsigned short word;    // sizeof == 16 bits == 65535
 typedef unsigned long dword;    // sizeof == 32 bits == 4 294 967 295
 
-// << Definição de constantes >>
-static const size_t BITS_WORD = sizeof(word)*8;
-// Base de numeração (65536)
-static const dword B_Radix = 0xFFFFL+1;
-// Maior algarismo na base B_Radix == (B_Radix - 1)
-static const word MAX_DIGIT = 0xFFFF;
-
 class BigTmp;
 
 class BigInt {
@@ -123,6 +116,7 @@ private:
         BigRep &operator*() const                   { return *b;    }
         BigRep *operator->() const                  { return b;     }
     };
+    
 // << Atributo único >>
     BigRepPtr brp;      // Apontador inteligente para BigRep
 // << Métodos Auxiliares >>
@@ -140,11 +134,17 @@ public:
     // ... Restantes membros (interface BigInt)
     BigInt &operator=(long n);
 // << Métodos de escrita no ostream
-    void big2dec(std::ostream&) const;
-    void big2hex(std::ostream&) const;
-    void big2txt(std::ostream&) const;
+    void big2dec(std::ostream &os) const { brp -> big2dec(os); }
+    void big2hex(std::ostream &os) const { brp -> big2hex(os); }
+    void big2txt(std::ostream &os) const { brp -> big2txt(os); }
 // << Métodos de Acesso >>
     size_t size() const     { return brp->sz;   }
+    size_t capacity() const { return brp->dim;  }
+    bool isOdd() const  { return brp->isOdd();  }
+    bool isEven() const { return brp->isEven(); }
+    bool isZero() const { return brp->isZero(); }
+    bool isOne() const  { return brp->isOne();  }
+    BigInt &neg()       { unlink(); brp->neg(); return *this;}
     BigInt operator-() const{
         BigInt aux(*this); aux.brp->neg(); return aux;
     }
@@ -157,10 +157,17 @@ public:
        { unlink(); *brp op *b.brp; return *this; }
     oper(+=) oper(-=)
 #undef oper
+
 #define oper(op) \
     BigInt &operator op##= (const BigInt &b) \
         { brp = *brp op *b.brp; return *this; }
     oper(*) oper(/) oper(%)
+#undef oper
+
+#define oper(op) \
+    inline BigInt &operator op (word n) \
+        { unlink(); *brp op n; return *this; }
+    oper(<<=) oper(>>=)
 #undef oper
 
 #define oper(op) \
@@ -174,10 +181,17 @@ public:
         { return *a.brp op *b.brp; }
     oper(<) oper(>) oper(<=) oper(>=) oper(!=) oper(==)
 #undef oper
+
+#define oper(op) \
+    BigInt &operator op (const long);
+    oper(+=) oper(-=) oper(*=) oper(/=) oper(%=)
+#undef oper
 };
 
+inline size_t max(size_t a, size_t b) { return (a>b) ? a : b; }
+
 class BigTmp{       // BigInt temporário
-    friend class BigInt;
+friend class BigInt;
 // << Atributos >>
     BigInt bigint; // Unico Atributo
     BigTmp(size_t dim, const BigInt &x) : bigint(dim, x) { }
@@ -189,11 +203,17 @@ public:
     oper(+) oper(-)
 #undef oper
 #define oper(op) \
-    friend BigTmp &operator op (const BigInt &a, const BigInt &b);
+    friend BigTmp operator op ( const BigInt &a, const BigInt &b);
+    //    { return BigTmp(max(a.size(), b.size())+1, a) op b; }
     oper(+) oper(-)
-#undef oper
+#undef oper 
 };
-
+BigTmp operator+ (const BigInt&a, const BigInt&b);
+BigTmp operator- (const BigInt&a, const BigInt&b);
+inline void BigInt::unlink() {
+    if(brp->count > 1)
+        brp = new BigRep(*brp);     // O segundo parametro toma
+}   
 std::ostream &txt(std::ostream &o);
 std::ostream &operator<<(std::ostream &os, const BigInt &bi);
 inline BigInt::BigInt(const char *s, StrType type, size_t dim) : brp( new BigRep(s, type, dim )) { }

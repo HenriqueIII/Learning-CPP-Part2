@@ -4,13 +4,19 @@
 #include <assert.h>
 #include <iomanip>
 
-inline size_t max(size_t a, size_t b) { return (a>b) ? a : b; }
+// << Definição de constantes >>
+static const size_t BITS_WORD = sizeof(word)*8;
+// Base de numeração (65536)
+static const dword B_Radix = 0xFFFFL+1;
+// Maior algarismo na base B_Radix == (B_Radix - 1)
+static const word MAX_DIGIT = 0xFFFF;
 
 #define oper(op) \
-    BigTmp &operator op (const BigInt &a, const BigInt &b) \
+    BigTmp operator op (const BigInt &a, const BigInt &b) \
         { return BigTmp(max(a.size(), b.size())+1, a) op b; }
     oper(+) oper(-)
 #undef oper
+
 // Construtores
 BigInt::BigRep::BigRep(const char *s, StrType typ, size_t dim){
     switch (typ)
@@ -52,11 +58,7 @@ void BigInt::BigRep::operator= (long n) {
     v[0] = word (n%B_Radix);
     if (sz == 2)
         v[1] = word(n/B_Radix);
-}
-inline void BigInt::unlink() {
-    if(brp->count > 1)
-        brp = new BigRep(*brp);     // O segundo parametro toma
-}                                   // valor DIM_MIN por omissão
+}                                // valor DIM_MIN por omissão
 word * BigInt::BigRep::allocate(size_t dimension) {
     for (dim = DIM_MIN; dim < dimension; dim *= 2);
     return new word[dim];
@@ -375,16 +377,11 @@ void BigInt::BigRep::operator++() {
     }else
         ++v[i];
 }
-inline void BigInt::big2txt(std::ostream &os) const {
-    brp->big2txt(os);   // Delega a escrita na representação
-}
 void BigInt::BigRep::big2txt(std::ostream &os) const {
     for (size_t i = 0; i < sz * 2; ++i)
         os << ( ( char * ) v )[i];
 }
-inline void BigInt::big2hex(std::ostream &os) const {
-    brp->big2hex(os);
-}
+
 void BigInt::BigRep::big2hex(std::ostream &os) const {
     if(signal == -1) os << '-';
     char c = os.fill(); // Obter o caracter de fill
@@ -403,9 +400,7 @@ void BigInt::BigRep::operator+=(word b){
 			signal = 1;
 		}
 }
-inline void BigInt::big2dec(std::ostream &os) const {
-    brp->big2dec(os);
-}
+
 void BigInt::BigRep::big2dec(BigRep &bb, std::ostream &os) {
     if (bb.isZero()) return;
     word rest;
@@ -418,7 +413,7 @@ void BigInt::BigRep::big2dec(std::ostream &os) const {
     if (signal == -1) os << '-';
     BigRep aux(*this); big2dec(aux, os);
 }
-/*BigInt& BigInt::operator+=(const long n){
+BigInt& BigInt::operator+=(const long n){
 	long b = (n<0) ? -n : n;
 	if (b > MAX_DIGIT) *this += BigInt(n);
 	else {
@@ -427,7 +422,7 @@ void BigInt::BigRep::big2dec(std::ostream &os) const {
 		else *brp += word (b);
 	}
 	return *this;
-}*/
+}
 
 //<<Operacoes de subtraccao com long >>
 void BigInt::BigRep::subNorm(BigRep& sub, const  BigRep& br, word n) {
@@ -461,7 +456,7 @@ void BigInt::BigRep::operator-=(word b){
 	}
 }
 
-/*BigInt& BigInt::operator-=(const long n){
+BigInt& BigInt::operator-=(const long n){
 	long b = (n < 0) ? -n : n;
 	if (b > MAX_DIGIT) *this -= BigInt(n);
 	else {
@@ -470,7 +465,7 @@ void BigInt::BigRep::operator-=(word b){
 		else *brp -= word (b);
 	}
 	return *this;
-}*/
+}
 
 // <<Operacoes de multiplicao com long>>
 void BigInt::BigRep::operator*=(word n){
@@ -495,7 +490,7 @@ void BigInt::BigRep::operator %=(word n) {
 	 sz = 1; 
 }
 
-/*#define oper(op) \
+#define oper(op) \
 	BigInt& BigInt::operator op (const long n) { \
 		if (n == 1) return *this; \
 		long b = ( n > 0) ? n : -n; \
@@ -506,7 +501,7 @@ void BigInt::BigRep::operator %=(word n) {
 		return *this; \
 	}
     oper(*=)   oper(/=) 
-#undef oper*/
+#undef oper
 
 
 std::ostream &txt(std::ostream &o){
@@ -527,3 +522,30 @@ std::ostream &operator<<(std::ostream &os, const BigInt &bi) {
     else bi.big2txt(os);
     return os;
 }
+
+/*int main(int argc, char ** argv){
+    BigInt n1 = 99999999L, n2, n3=6871209L, n4=724695L, n5;
+    std::cout << n1 << '-' << n3 << '-' << n4 << '-' << n5 << std::endl;
+    clock_t tempoi = clock();
+    for (int i=0;i<10; ++i) {
+        n3 = n1 * n3;
+        n3 += BigInt("-123456780", BigInt::DEC);
+        n5 = n3/n4;
+        n5 = n5 * n4 + n3 % n4 - n3;
+        n3 -= -123456780L;
+        if (n5 != 0L) std::cout << "ERRO" << std::endl;
+    }
+    clock_t tempof = clock();
+    std::cout << "\nn3=" << n3 << "\nn5=" << n5 << std::endl;
+    std::cout << "Tempo = " << float(tempof-tempoi)/CLOCKS_PER_SEC << "secs" << std::endl;
+    BigInt bHex("f7cd4", BigInt::HEX);
+	BigInt bDec("765432", BigInt::DEC);
+	BigInt bTxt ("Texto a cifrar", BigInt::TEXT);
+	std::cout << std::hex << bHex << std::endl; // Valor em hexadecimal.
+	std::cout << std::dec << bHex << std::endl; // Valor em decimal.
+	std::cout << std::dec << bDec << std::endl; // Valor em decimal.
+	std::cout << std::hex << bDec << std::endl; // Valor em hexadecimal.
+	std::cout << txt << bTxt << std::endl; // Texto.
+	std::cout << std::hex << bTxt << std::endl; // Valor em hexadecimal.
+    return 0;
+}*/
