@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "c:\\Users\\paulo\\OneDrive\\Documentos\\GitHub\\Learning-CPP-Part2\\Capitulo 2\\Exemplos"
+    "cmake.sourceDirectory": "c:\\Users\\paulo\\OneDrive\\Documentos\\GitHub\\Learning-CPP-Part2\\Capitulo 2\\Exemplos",
+    "cmake.configureOnOpen": false
 }
