@@ -73,4 +73,14 @@ Fraction &Fraction::operator/= (const Fraction &b) {
     norm();
     return *this;
 }
+
+BigInt one(1L), ten(10L);
+
+BigInt exp10at (word n) {
+    if(n==0) return one;
+    BigInt v(ten);
+    for (word i=1; i<n; ++i) v*=ten;
+    return v;
+}
+
 #endif
