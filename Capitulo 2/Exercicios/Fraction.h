@@ -87,6 +87,19 @@ BigInt exp10at (word n) {
     return v;
 }
 
+Fraction roundUp(Fraction x, word precision){
+    BigInt integer, dec, desn(exp10at(precision));
+    integer = x.getNum()/x.getDen();
+    BigInt aux = x.getNum()*desn/x.getDen();
+    dec = aux - integer * desn;
+    if (!precision){
+        aux = x.getNum()*exp10at(precision+1)/x.getDen();
+        return Fraction(integer + (aux >= 5 ? 1 : 0), 1);
+    }
+    std::cout << integer << '.' << dec << std::endl;
+    //return Fraction (x.getNum()/x.getDen(), x.getDen()*exp10at(precision) + (x.getDen()*exp10at(precision)>=5?1:0));
+}
+
 Fraction pi(){
     long n;
         Fraction    ka(one, BigInt(25L)),
@@ -193,7 +206,7 @@ Fraction cos(word degree, word precision) {      // Calcular o coseno com precis
 Fraction arcsin(Fraction rad) {
     BigInt num(one), den(one);
     Fraction res(rad), d(1L), power(rad);
-    const BigInt desn(exp10at(12)); 
+    const BigInt desn(exp10at(6)); 
     BigInt decimalPrev, decimalCurr;
     for (int i = 1; i < 5 || (decimalPrev!=decimalCurr) ; i++) {
         if(i%2){
