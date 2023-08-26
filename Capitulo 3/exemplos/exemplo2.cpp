@@ -1,11 +1,9 @@
 #include <iostream>
 #include <cassert>
 
+template <typename T, unsigned DIM>
 class Stack {
 public:
-    typedef char T;                 // O tipo de cada elemento
-    static const unsigned DIM = 32; // Dimensão de stack
-private:
     T data[DIM];        // contentor estatico que suporta o stack
     unsigned size;      // Numero de objectos contidos
 public:
@@ -22,8 +20,13 @@ public:
 };
 
 int main(int argc, char ** argv) {
-    Stack stk1;
+    Stack<char,32>stk1;
+    Stack<int,100>stk2;
+
     stk1.push('a');
     stk1.print();
+
+    stk2.push(1000);
+    stk2.print();
     return 0;
 }
