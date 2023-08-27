@@ -48,7 +48,7 @@ void sort(Array<char*> &v) {
 class Word{
     char * ptw;
 public:
-    Word(char *pt = " ")    // Construtor com string C-Style
+    Word(char *pt = (char*)" ")    // Construtor com string C-Style
     { ptw = new char[strlen(pt)+1]; strcpy(ptw, pt); }
     Word(const Word &w)     // Construtor por cópia
     { ptw = new char[strlen(w.ptw)+1]; strcpy(ptw, w.ptw); }
@@ -74,10 +74,10 @@ template<class T>
 std::ostream &operator<< (std::ostream &o, Array<T> &a) {
     if ( a.size() > 0) {
         o << a[0];
-        //for (unsigned i=1; i < a.size(); ++i) {}
-            //o << ',' << i; 
-            //o << ',' << a[i];
+        for (unsigned i=1; i < a.size(); ++i)
+            o << ',' << a[i];
     }
+    return o;
 }
 
 // <<Funções para recolha de dados do console input>>
@@ -116,7 +116,8 @@ template<class T> void testArray() {
         std::cin.putback(ch); readValue(value); a << value; 
     }
     sort(a);
-    std::cout << a << std::endl;
+    std::cout << a ;
+    std::cout << std::endl;
 }
 
 
@@ -124,7 +125,7 @@ template<class T> void testArray() {
 int main(int argc, char ** argv) {
     testArray<char>();
     testArray<int>();
-    testArray<char*>();
+    //testArray<char*>(); // não funciona
     testArray<Word>();
     return 0;
 }
