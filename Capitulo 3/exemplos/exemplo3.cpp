@@ -32,13 +32,13 @@ Array<T>::Array(unsigned d) {
 template<class T> void sort(Array<T> &a) {
     for (unsigned i=a.size()-1; i > 0; --i)
         for (unsigned j = 1; j<=i; ++j)
-            if (a[j] > a[j-1])
+            if (a[j] < a[j-1])
                 swap (a[j], a[j-1]);
 }
 
 void sort(Array<char*> &v) {
     for (unsigned i = v.size()-1; i > 0; --i)
-        for (unsigned j = 0; j<= i; ++j)
+        for (unsigned j = 1; j<= i; ++j)
             if ( strcmp ( v[j], v[j-1] ) < 0 )
                 swap(v[j], v[j-1]);
 }
@@ -125,7 +125,7 @@ template<class T> void testArray() {
 int main(int argc, char ** argv) {
     testArray<char>();
     testArray<int>();
-    //testArray<char*>(); // não funciona
+    testArray<char*>(); // não funciona
     testArray<Word>();
     return 0;
 }
