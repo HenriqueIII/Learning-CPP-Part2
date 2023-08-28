@@ -125,7 +125,7 @@ template<class T> void testArray() {
 int main(int argc, char ** argv) {
     testArray<char>();
     testArray<int>();
-    testArray<char*>(); // não funciona
+    testArray<char*>();
     testArray<Word>();
     return 0;
 }
