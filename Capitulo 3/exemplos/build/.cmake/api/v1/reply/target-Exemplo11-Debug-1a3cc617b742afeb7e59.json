@@ -2,10 +2,10 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "Exemplo10.exe"
+			"path" : "Exemplo11.exe"
 		},
 		{
-			"path" : "Exemplo10.pdb"
+			"path" : "Exemplo11.pdb"
 		}
 	],
 	"backtrace" : 1,
@@ -14,8 +14,7 @@
 		"commands" : 
 		[
 			"add_executable",
-			"target_link_libraries",
-			"target_include_directories"
+			"target_link_libraries"
 		],
 		"files" : 
 		[
@@ -29,17 +28,11 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 7,
-				"parent" : 0
-			},
-			{
-				"command" : 1,
-				"file" : 0,
 				"line" : 8,
 				"parent" : 0
 			},
 			{
-				"command" : 2,
+				"command" : 1,
 				"file" : 0,
 				"line" : 10,
 				"parent" : 0
@@ -53,13 +46,6 @@
 			[
 				{
 					"fragment" : "-g"
-				}
-			],
-			"includes" : 
-			[
-				{
-					"backtrace" : 3,
-					"path" : "C:/Users/paulo/OneDrive/Documentos/GitHub/Learning-CPP-Part2/Capitulo 3/exemplos/build"
 				}
 			],
 			"language" : "CXX",
@@ -76,7 +62,7 @@
 			"id" : "Str1::@6890427a1f51a3e7e1df"
 		}
 	],
-	"id" : "Exemplo10::@6890427a1f51a3e7e1df",
+	"id" : "Exemplo11::@6890427a1f51a3e7e1df",
 	"link" : 
 	{
 		"commandFragments" : 
@@ -101,8 +87,8 @@
 		],
 		"language" : "CXX"
 	},
-	"name" : "Exemplo10",
-	"nameOnDisk" : "Exemplo10.exe",
+	"name" : "Exemplo11",
+	"nameOnDisk" : "Exemplo11.exe",
 	"paths" : 
 	{
 		"build" : ".",
@@ -123,7 +109,7 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "exemplo10.cpp",
+			"path" : "exemplo11.cpp",
 			"sourceGroupIndex" : 0
 		}
 	],

@@ -64,7 +64,33 @@ inline Str2 & Str2::operator= (const Str2 &s){
     return *this;
 }
 inline Str2 & Str2::operator= (const char * s) {
-    
+    if (body->count > 1){   // Separar e criar uma cópia
+        body->decRef();
+        body = new StrBody(s, strlen(s));
+        body->incRef(); 
+    }else
+        *((Str1*)body)=s;
+    return *this;
+}
+
+inline Str2 & Str2::operator+=(const Str2 & s){
+    if (body->count > 1){
+        body->decRef();
+        body = new StrBody(c_str(), size(), size()+s.size());
+        body -> incRef();
+    }
+    *((Str1 *)body) += *((Str1 *)s.body);
+    return *this;
+}
+
+inline Str2 & Str2::operator+=(const char * s) {
+    if (body->count > 1) {
+        body->decRef();
+        body = new StrBody(c_str(), size(), size()+strlen(s));
+        body->incRef(); 
+    }
+    *((Str1 *)body) += s;
+    return *this;
 }
 
 
